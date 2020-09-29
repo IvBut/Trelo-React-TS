@@ -30,7 +30,8 @@ export enum ActionTypes {
     ADD_TASK = 'ADD_TASK',
     MOVE_LIST = 'MOVE_LIST',
     SET_DRAGGED_ITEM = 'SET_DRAGGED_ITEM',
-    DEFAULT = 'DEFAULT'
+    DEFAULT = 'DEFAULT',
+    MOVE_TASK = 'MOVE_TASK',
 }
 
 type AddListAction = {
@@ -53,7 +54,17 @@ type DraggedItemAction = {
     payload: DragItem | undefined
 }
 
-type Action = AddListAction | AddTaskAction | MoveListAction | DraggedItemAction
+type MoveTaskAction = {
+    type: ActionTypes.MOVE_TASK
+    payload: {
+        dragIndex: number
+        hoverIndex: number
+        sourceColumn: string
+        targetColumn: string
+    }
+}
+
+type Action = AddListAction | AddTaskAction | MoveListAction | DraggedItemAction | MoveTaskAction
 
 
 const appMockData: IAppState = {
@@ -114,6 +125,22 @@ const handlers : {[key: string] : (state: IAppState, action: Action) => IAppStat
             return {
                 ...state,
                 draggedItem: (action.payload) as DragItem
+            }
+        },
+    [ActionTypes.MOVE_TASK]:
+        (state: IAppState, action: Action):IAppState => {
+        const {
+            dragIndex,
+            hoverIndex,
+            sourceColumn,
+            targetColumn,
+        } = (action as MoveTaskAction).payload;
+        const sourceLaneIndex = findItemIndexById(state.lists, sourceColumn);
+        const targetLaneIndex = findItemIndexById(state.lists, targetColumn);
+        const item = state.lists[sourceLaneIndex].tasks.splice(dragIndex,1)[0];
+        state.lists[targetLaneIndex].tasks.splice(hoverIndex,0,item);
+            return {
+                ...state
             }
         },
     [ActionTypes.DEFAULT]: (state: IAppState) => (state)
